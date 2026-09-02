@@ -36,6 +36,22 @@ Each opcode is one byte. Instructions marked `operand` consume the following byt
 
 `SUB` will define `C = 1` as “no borrow,” matching the common adder-based implementation `A + ~B + 1`.
 
+## Arithmetic logic unit
+
+The implemented combinational ALU accepts two 8-bit operands and a 3-bit operation selector.
+
+| Selector | Operation | Result | Carry output |
+|---:|---|---|---|
+| `000` | ADD | `A + B` | Unsigned carry |
+| `001` | SUB | `A + not(B) + 1` | `1` means no borrow |
+| `010` | AND | `A and B` | `0` |
+| `011` | OR | `A or B` | `0` |
+| `100` | XOR | `A xor B` | `0` |
+| `101` | PASS A | `A` | `0` |
+| `110`, `111` | Reserved | `0` | `0` |
+
+The zero output is `1` whenever the selected 8-bit result is `00`. Addition and subtraction share the structural ripple-carry adder: every B bit passes through an XOR controlled by the subtraction selector, and that selector also becomes the adder carry-in. The logic functions are generated from the reusable structural gate entities.
+
 ## Planned microarchitecture
 
 The CPU uses a multi-cycle state machine so that a small amount of hardware can be reused:
@@ -52,7 +68,7 @@ The `transistor_model/` modules express the truth-table behavior of CMOS pull-up
 
 - Truth-table checks for primitive cells
 - Exhaustive arithmetic tests for small datapath blocks
-- Directed and randomized ALU tests
+- Exhaustive ALU result and flag tests
 - Cycle-accurate tests for the controller
 - Small assembly programs for CPU-level integration
 

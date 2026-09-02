@@ -2,9 +2,9 @@ GHDL ?= ghdl
 GHDL_FLAGS := --std=08
 BUILD_DIR := build/ghdl
 
-.PHONY: test test-cmos test-adder clean
+.PHONY: test test-cmos test-adder test-alu clean
 
-test: test-cmos test-adder
+test: test-cmos test-adder test-alu
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -26,6 +26,18 @@ test-adder: $(BUILD_DIR)
 		ripple_carry_adder_8bit_tb
 	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) \
 		ripple_carry_adder_8bit_tb --assert-level=error
+
+test-alu: $(BUILD_DIR)
+	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR) \
+		rtl/logic/alu_pkg.vhd \
+		rtl/logic/gates.vhd \
+		rtl/logic/full_adder_1bit.vhd \
+		rtl/logic/ripple_carry_adder_8bit.vhd \
+		rtl/logic/alu8.vhd \
+		tb/alu8_tb.vhd
+	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) alu8_tb
+	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) alu8_tb \
+		--assert-level=error
 
 clean:
 	rm -rf $(BUILD_DIR)

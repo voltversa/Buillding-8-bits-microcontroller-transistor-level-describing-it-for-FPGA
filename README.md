@@ -9,13 +9,16 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 1 establishes a tested logic foundation:
+Milestone 2 adds a complete combinational ALU to the tested logic foundation:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
 - structural 1-bit full adder
 - structural 8-bit ripple-carry adder
 - exhaustive adder verification across all 131,072 input combinations
+- structural ADD, SUB, AND, OR, XOR, and pass-through ALU operations
+- zero and carry/no-borrow flag generation
+- exhaustive ALU verification across all 524,288 input combinations
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -58,7 +61,7 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 
 - [x] Establish transistor-model and synthesizable-RTL boundaries
 - [x] Verify basic CMOS cells and an 8-bit ripple-carry adder
-- [ ] Build the 8-bit ALU and flags
+- [x] Build the 8-bit ALU and flags
 - [ ] Add registers, program counter, and internal bus
 - [ ] Implement the instruction decoder and control state machine
 - [ ] Add 256-byte memory and a reference program
