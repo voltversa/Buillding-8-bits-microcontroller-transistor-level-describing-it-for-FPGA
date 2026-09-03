@@ -9,7 +9,7 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 2 adds a complete combinational ALU to the tested logic foundation:
+Milestone 3 adds the first clocked datapath blocks to the tested logic foundation:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
@@ -19,6 +19,9 @@ Milestone 2 adds a complete combinational ALU to the tested logic foundation:
 - structural ADD, SUB, AND, OR, XOR, and pass-through ALU operations
 - zero and carry/no-borrow flag generation
 - exhaustive ALU verification across all 524,288 input combinations
+- reusable synchronous 8-bit register with load-enable and hold behavior
+- structural 8-bit program counter with parallel load, increment, hold, and wraparound
+- verified reset and control-priority behavior for both sequential blocks
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -42,6 +45,7 @@ The first instruction set and cycle-level behavior are documented in [docs/archi
 ```text
 transistor_model/  Educational VHDL models of CMOS-cell behavior
 rtl/logic/         Synthesizable structural VHDL logic and arithmetic
+rtl/datapath/      Clocked registers and processor datapath blocks
 tb/                Self-checking simulations
 docs/              Architecture and design decisions
 .github/workflows/ Continuous verification
@@ -62,7 +66,8 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 - [x] Establish transistor-model and synthesizable-RTL boundaries
 - [x] Verify basic CMOS cells and an 8-bit ripple-carry adder
 - [x] Build the 8-bit ALU and flags
-- [ ] Add registers, program counter, and internal bus
+- [x] Add registers and program counter
+- [ ] Add the internal bus and datapath selection
 - [ ] Implement the instruction decoder and control state machine
 - [ ] Add 256-byte memory and a reference program
 - [ ] Integrate the complete CPU and run instruction-level tests

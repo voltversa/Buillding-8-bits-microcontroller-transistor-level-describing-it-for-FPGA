@@ -52,6 +52,19 @@ The implemented combinational ALU accepts two 8-bit operands and a 3-bit operati
 
 The zero output is `1` whenever the selected 8-bit result is `00`. Addition and subtraction share the structural ripple-carry adder: every B bit passes through an XOR controlled by the subtraction selector, and that selector also becomes the adder carry-in. The logic functions are generated from the reusable structural gate entities.
 
+## Clocked datapath state
+
+The implemented `register8` block is the reusable storage primitive for the accumulator, operand register, and instruction register. It has synchronous active-high reset and load-enable inputs. At each rising clock edge, reset clears the register, load-enable captures the input, and otherwise the stored value is held.
+
+The implemented `program_counter8` supports four behaviors with an explicit priority:
+
+1. Reset to `00`.
+2. Parallel-load a branch or jump address.
+3. Increment after an instruction or operand fetch.
+4. Hold the current address.
+
+Incrementing reuses the structural ripple-carry adder by adding a carry-in of one to an all-zero second operand. Overflow intentionally wraps `FF` to `00`, matching the 256-byte address space. Both blocks use synchronous control so their state changes only on rising clock edges.
+
 ## Planned microarchitecture
 
 The CPU uses a multi-cycle state machine so that a small amount of hardware can be reused:
