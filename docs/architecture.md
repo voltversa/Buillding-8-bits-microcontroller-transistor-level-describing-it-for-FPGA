@@ -65,6 +65,22 @@ The implemented `program_counter8` supports four behaviors with an explicit prio
 
 Incrementing reuses the structural ripple-carry adder by adding a carry-in of one to an all-zero second operand. Overflow intentionally wraps `FF` to `00`, matching the 256-byte address space. Both blocks use synchronous control so their state changes only on rising clock edges.
 
+## Internal data bus
+
+The implemented internal bus is an 8-bit combinational source selector. A 3-bit control field selects one of the datapath values:
+
+| Selector | Bus source |
+|---:|---|
+| `000` | Accumulator |
+| `001` | Operand register |
+| `010` | Instruction register |
+| `011` | Program counter |
+| `100` | Memory read data |
+| `101` | ALU result |
+| `110`, `111` | Constant zero |
+
+A discrete processor can use tri-state output drivers so that one component drives a shared physical wire at a time. Internal tri-state nets are generally not present in modern FPGA routing fabric, so this design uses a structural multiplexer tree instead. Eight copies of a gate-built 2:1 multiplexer form each selection level. This maps predictably to FPGA logic and makes invalid selector codes produce zero rather than contention or an unknown value.
+
 ## Planned microarchitecture
 
 The CPU uses a multi-cycle state machine so that a small amount of hardware can be reused:

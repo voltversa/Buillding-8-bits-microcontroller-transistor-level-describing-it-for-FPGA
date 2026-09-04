@@ -9,7 +9,7 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 3 adds the first clocked datapath blocks to the tested logic foundation:
+Milestone 4 connects the datapath through a synthesizable internal bus:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
@@ -22,6 +22,10 @@ Milestone 3 adds the first clocked datapath blocks to the tested logic foundatio
 - reusable synchronous 8-bit register with load-enable and hold behavior
 - structural 8-bit program counter with parallel load, increment, hold, and wraparound
 - verified reset and control-priority behavior for both sequential blocks
+- structural 2:1 multiplexer assembled from the reusable gate cells
+- 8-bit internal bus selecting accumulator, operand, instruction, PC, memory, or ALU data
+- deterministic zero output for both reserved selector codes
+- verification of every selector and 2,048 varied full-byte bus cases
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -67,7 +71,7 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 - [x] Verify basic CMOS cells and an 8-bit ripple-carry adder
 - [x] Build the 8-bit ALU and flags
 - [x] Add registers and program counter
-- [ ] Add the internal bus and datapath selection
+- [x] Add the internal bus and datapath selection
 - [ ] Implement the instruction decoder and control state machine
 - [ ] Add 256-byte memory and a reference program
 - [ ] Integrate the complete CPU and run instruction-level tests
