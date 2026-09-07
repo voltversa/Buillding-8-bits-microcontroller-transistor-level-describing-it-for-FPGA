@@ -36,6 +36,12 @@ Each opcode is one byte. Instructions marked `operand` consume the following byt
 
 `SUB` will define `C = 1` as “no borrow,” matching the common adder-based implementation `A + ~B + 1`.
 
+## Instruction decoder
+
+The implemented combinational decoder recognizes the 13 opcodes in the table above and exposes four pieces of control information: instruction class, whether a second byte must be fetched, the ALU selector, and a validity flag. Each opcode recognizer is an 8-bit structural equality comparator assembled from XOR, inverter, and AND cells. Their match terms are combined through a balanced OR tree.
+
+All other opcode bytes produce `INSTRUCTION_INVALID`, deassert `has_operand` and `valid`, and select the benign `ALU_PASS_A` operation. This makes every one of the 256 input combinations explicit and prevents a reserved opcode from accidentally requesting an architectural operation. The decoder testbench checks all 256 values and confirms that exactly 13 are valid.
+
 ## Arithmetic logic unit
 
 The implemented combinational ALU accepts two 8-bit operands and a 3-bit operation selector.
@@ -98,6 +104,7 @@ The `transistor_model/` modules express the truth-table behavior of CMOS pull-up
 - Truth-table checks for primitive cells
 - Exhaustive arithmetic tests for small datapath blocks
 - Exhaustive ALU result and flag tests
+- Exhaustive instruction decoding across all opcode bytes
 - Cycle-accurate tests for the controller
 - Small assembly programs for CPU-level integration
 

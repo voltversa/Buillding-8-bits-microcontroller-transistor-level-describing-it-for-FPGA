@@ -9,7 +9,7 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 4 connects the datapath through a synthesizable internal bus:
+Milestone 5 adds structural instruction decoding to the tested datapath:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
@@ -26,6 +26,9 @@ Milestone 4 connects the datapath through a synthesizable internal bus:
 - 8-bit internal bus selecting accumulator, operand, instruction, PC, memory, or ALU data
 - deterministic zero output for both reserved selector codes
 - verification of every selector and 2,048 varied full-byte bus cases
+- gate-composed equality comparators for all 13 defined opcodes
+- deterministic instruction class, operand-length, validity, and ALU-control outputs
+- exhaustive verification of all 256 possible opcode bytes
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -50,6 +53,7 @@ The first instruction set and cycle-level behavior are documented in [docs/archi
 transistor_model/  Educational VHDL models of CMOS-cell behavior
 rtl/logic/         Synthesizable structural VHDL logic and arithmetic
 rtl/datapath/      Clocked registers and processor datapath blocks
+rtl/control/       Synthesizable instruction decoding and control logic
 tb/                Self-checking simulations
 docs/              Architecture and design decisions
 .github/workflows/ Continuous verification
@@ -72,7 +76,8 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 - [x] Build the 8-bit ALU and flags
 - [x] Add registers and program counter
 - [x] Add the internal bus and datapath selection
-- [ ] Implement the instruction decoder and control state machine
+- [x] Implement the exhaustive instruction decoder
+- [ ] Implement the multi-cycle control state machine
 - [ ] Add 256-byte memory and a reference program
 - [ ] Integrate the complete CPU and run instruction-level tests
 - [ ] Add an FPGA top level, constraints, and board demonstration
