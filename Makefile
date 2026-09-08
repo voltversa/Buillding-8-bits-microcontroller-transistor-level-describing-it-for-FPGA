@@ -2,9 +2,9 @@ GHDL ?= ghdl
 GHDL_FLAGS := --std=08
 BUILD_DIR := build/ghdl
 
-.PHONY: test test-cmos test-adder test-alu test-datapath test-bus test-decoder clean
+.PHONY: test test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control clean
 
-test: test-cmos test-adder test-alu test-datapath test-bus test-decoder
+test: test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -73,6 +73,19 @@ test-decoder: $(BUILD_DIR)
 		tb/instruction_decoder_tb.vhd
 	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) instruction_decoder_tb
 	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) instruction_decoder_tb \
+		--assert-level=error
+
+test-control: $(BUILD_DIR)
+	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR) \
+		rtl/datapath/bus_pkg.vhd \
+		rtl/datapath/register8.vhd \
+		rtl/control/instruction_pkg.vhd \
+		rtl/control/control_pkg.vhd \
+		rtl/control/control_logic.vhd \
+		rtl/control/control_unit.vhd \
+		tb/control_unit_tb.vhd
+	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) control_unit_tb
+	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) control_unit_tb \
 		--assert-level=error
 
 clean:

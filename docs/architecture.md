@@ -87,13 +87,18 @@ The implemented internal bus is an 8-bit combinational source selector. A 3-bit 
 
 A discrete processor can use tri-state output drivers so that one component drives a shared physical wire at a time. Internal tri-state nets are generally not present in modern FPGA routing fabric, so this design uses a structural multiplexer tree instead. Eight copies of a gate-built 2:1 multiplexer form each selection level. This maps predictably to FPGA logic and makes invalid selector codes produce zero rather than contention or an unknown value.
 
-## Planned microarchitecture
+## Multi-cycle control unit
 
-The CPU uses a multi-cycle state machine so that a small amount of hardware can be reused:
+The implemented controller uses the existing synchronous `register8` as a three-bit state register, with a separate combinational next-state and output network. The six defined states are:
 
 1. **Fetch**: read `MEM[PC]` into the instruction register and increment `PC`.
-2. **Operand fetch**: for a two-byte instruction, read `MEM[PC]` into the operand register and increment `PC`.
-3. **Execute**: select the ALU or memory operation, update state, then return to fetch.
+2. **Decode**: validate the instruction and choose whether an operand byte is required.
+3. **Operand fetch**: read `MEM[PC]` into the operand register and increment `PC`.
+4. **Execute**: issue the bus, register, memory, flag, and PC control signals for the decoded instruction.
+5. **Halted**: hold all write controls inactive after `HLT` until reset.
+6. **Fault**: hold all write controls inactive after an invalid opcode or unused state encoding until reset.
+
+The unified memory is assumed to have a combinational read port. `address_from_operand = 0` selects `PC` for instruction and operand fetches; `address_from_operand = 1` selects the operand register for `LDA`, `STA`, and ALU memory accesses. Only ALU instructions assert `flags_load`. `JZ` and `JC` test the stored flags and assert `pc_load` only when their condition is true. The cycle-accurate testbench checks every instruction class, taken and non-taken conditional branches, both lock states, and reset recovery.
 
 ## Abstraction boundary
 

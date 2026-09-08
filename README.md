@@ -9,7 +9,7 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 5 adds structural instruction decoding to the tested datapath:
+Milestone 6 adds the multi-cycle control unit to the tested datapath:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
@@ -29,6 +29,10 @@ Milestone 5 adds structural instruction decoding to the tested datapath:
 - gate-composed equality comparators for all 13 defined opcodes
 - deterministic instruction class, operand-length, validity, and ALU-control outputs
 - exhaustive verification of all 256 possible opcode bytes
+- fetch, decode, operand-fetch, and execute sequencing from a clocked state register
+- datapath control strobes for register, flag, PC, bus, and memory operations
+- persistent halt and invalid-instruction fault states that require reset
+- cycle-accurate verification of every instruction class and both branch outcomes
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -77,7 +81,7 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 - [x] Add registers and program counter
 - [x] Add the internal bus and datapath selection
 - [x] Implement the exhaustive instruction decoder
-- [ ] Implement the multi-cycle control state machine
+- [x] Implement the multi-cycle control state machine
 - [ ] Add 256-byte memory and a reference program
 - [ ] Integrate the complete CPU and run instruction-level tests
 - [ ] Add an FPGA top level, constraints, and board demonstration
