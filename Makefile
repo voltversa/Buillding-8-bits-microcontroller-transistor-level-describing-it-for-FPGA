@@ -2,9 +2,9 @@ GHDL ?= ghdl
 GHDL_FLAGS := --std=08
 BUILD_DIR := build/ghdl
 
-.PHONY: test test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control clean
+.PHONY: test test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory clean
 
-test: test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control
+test: test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -86,6 +86,20 @@ test-control: $(BUILD_DIR)
 		tb/control_unit_tb.vhd
 	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) control_unit_tb
 	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) control_unit_tb \
+		--assert-level=error
+
+test-memory: $(BUILD_DIR)
+	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR) \
+		rtl/logic/gates.vhd \
+		rtl/logic/mux2_1bit.vhd \
+		rtl/logic/byte_equal8.vhd \
+		rtl/control/instruction_pkg.vhd \
+		rtl/memory/memory_pkg.vhd \
+		rtl/memory/memory_byte.vhd \
+		rtl/memory/memory256x8.vhd \
+		tb/memory256x8_tb.vhd
+	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) memory256x8_tb
+	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) memory256x8_tb \
 		--assert-level=error
 
 clean:

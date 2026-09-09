@@ -87,6 +87,25 @@ The implemented internal bus is an 8-bit combinational source selector. A 3-bit 
 
 A discrete processor can use tri-state output drivers so that one component drives a shared physical wire at a time. Internal tri-state nets are generally not present in modern FPGA routing fabric, so this design uses a structural multiplexer tree instead. Eight copies of a gate-built 2:1 multiplexer form each selection level. This maps predictably to FPGA logic and makes invalid selector codes produce zero rather than contention or an unknown value.
 
+## Unified structural memory
+
+The implemented memory contains 256 addressable bytes. Each byte is an explicit clocked storage element, each write enable is formed by an 8-bit structural address comparator, and the read path is a balanced eight-level tree of gate-built 2:1 multiplexers. Reads are combinational; writes occur on the rising clock edge. Synchronous reset has priority over writes and reloads the configured initial image.
+
+This organization is deliberately structural and inspectable, but synthesis will use approximately 2,048 flip-flops plus decoder and multiplexer logic rather than infer an FPGA block RAM. A later board-specific implementation can replace it with an inferred or vendor RAM without changing the CPU-facing interface. No block-RAM utilization or hardware timing result is claimed for this milestone.
+
+The default image contains this reference program:
+
+| Address | Bytes | Instruction | Purpose |
+|---:|---|---|---|
+| `00` | `10 05` | `LDI 05` | Load 5 into A |
+| `02` | `12 F0` | `STA F0` | Store 5 at data address F0 |
+| `04` | `11 F0` | `LDA F0` | Load the stored value |
+| `06` | `20 F0` | `ADD F0` | Add 5, producing A = 10 |
+| `08` | `12 F1` | `STA F1` | Store the result at F1 |
+| `0A` | `FF` | `HLT` | Stop execution |
+
+Once the complete CPU is integrated, successful execution should leave `MEM[F0] = 05` and `MEM[F1] = 0A`. That instruction-level result remains a target until the integration test passes; this milestone verifies only the memory hardware and image contents.
+
 ## Multi-cycle control unit
 
 The implemented controller uses the existing synchronous `register8` as a three-bit state register, with a separate combinational next-state and output network. The six defined states are:
@@ -111,6 +130,7 @@ The `transistor_model/` modules express the truth-table behavior of CMOS pull-up
 - Exhaustive ALU result and flag tests
 - Exhaustive instruction decoding across all opcode bytes
 - Cycle-accurate tests for the controller
+- Exhaustive address tests for memory writes, reads, retention, and reset loading
 - Small assembly programs for CPU-level integration
 
 Any behavior not yet backed by a passing test remains a target, not a claimed result.
