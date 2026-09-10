@@ -9,7 +9,7 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 7 adds unified structural memory and a reference program:
+Milestone 8 integrates the complete structural CPU and executes its first program:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
@@ -37,6 +37,10 @@ Milestone 7 adds unified structural memory and a reference program:
 - balanced eight-level structural multiplexer for combinational reads
 - reference program that exercises immediate, load, store, addition, and halt
 - exhaustive write, read, retention, and reset-image verification at every address
+- structural integration of the datapath, decoder, controller, ALU, flags, PC, and memory
+- safe read-only memory debug access with writes inhibited during inspection
+- end-to-end execution of the reference program in exactly 23 clock cycles
+- verified final state: accumulator `0A`, `MEM[F0] = 05`, and `MEM[F1] = 0A`
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -63,6 +67,7 @@ rtl/logic/         Synthesizable structural VHDL logic and arithmetic
 rtl/datapath/      Clocked registers and processor datapath blocks
 rtl/control/       Synthesizable instruction decoding and control logic
 rtl/memory/        Structural unified memory and program images
+rtl/cpu/           Complete processor integration
 tb/                Self-checking simulations
 docs/              Architecture and design decisions
 .github/workflows/ Continuous verification
@@ -88,7 +93,7 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 - [x] Implement the exhaustive instruction decoder
 - [x] Implement the multi-cycle control state machine
 - [x] Add 256-byte memory and a reference program
-- [ ] Integrate the complete CPU and run instruction-level tests
+- [x] Integrate the complete CPU and run instruction-level tests
 - [ ] Add an FPGA top level, constraints, and board demonstration
 
 ## Design rule

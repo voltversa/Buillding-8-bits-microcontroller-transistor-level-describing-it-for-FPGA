@@ -104,7 +104,7 @@ The default image contains this reference program:
 | `08` | `12 F1` | `STA F1` | Store the result at F1 |
 | `0A` | `FF` | `HLT` | Stop execution |
 
-Once the complete CPU is integrated, successful execution should leave `MEM[F0] = 05` and `MEM[F1] = 0A`. That instruction-level result remains a target until the integration test passes; this milestone verifies only the memory hardware and image contents.
+The complete CPU integration test now verifies that execution leaves `MEM[F0] = 05` and `MEM[F1] = 0A`.
 
 ## Multi-cycle control unit
 
@@ -119,6 +119,14 @@ The implemented controller uses the existing synchronous `register8` as a three-
 
 The unified memory is assumed to have a combinational read port. `address_from_operand = 0` selects `PC` for instruction and operand fetches; `address_from_operand = 1` selects the operand register for `LDA`, `STA`, and ALU memory accesses. Only ALU instructions assert `flags_load`. `JZ` and `JC` test the stored flags and assert `pc_load` only when their condition is true. The cycle-accurate testbench checks every instruction class, taken and non-taken conditional branches, both lock states, and reset recovery.
 
+## Complete CPU integration
+
+The implemented `cpu8` entity structurally connects the instruction and operand registers, accumulator, program counter, flag register, instruction decoder, multi-cycle controller, ALU, internal bus, memory-address multiplexers, and unified memory. ALU operand A comes from the accumulator and operand B comes from `MEM[operand]`. The decoder's ALU selector and instruction classification feed the controller and datapath directly.
+
+The two stored flags occupy the low bits of an existing eight-bit register: bit 0 is carry and bit 1 is zero. They update only when the controller asserts `flags_load`. Memory addresses normally select either PC or the operand register. A separate verification/debug address can override that selection, and a structural interlock disables memory writes whenever debug access is active.
+
+The end-to-end test resets the CPU, releases it, and lets the default reference program run without testbench intervention. The CPU reaches `HLT` after exactly 23 rising edges with `PC = 0B`, `A = 0A`, `MEM[F0] = 05`, and `MEM[F1] = 0A`. It also verifies that program bytes were not modified and that reset recovers from halt and reloads the initial memory image. These are simulation results; FPGA timing and physical-board operation are not yet claimed.
+
 ## Abstraction boundary
 
 The `transistor_model/` modules express the truth-table behavior of CMOS pull-up and pull-down networks in VHDL. The accompanying CMOS documentation explains the transistor arrangement. FPGA synthesis starts at `rtl/logic/`, where equivalent cells are expressed as synthesizable structural VHDL-2008. Tests compare behavior at both levels; they do not imply that an FPGA contains discrete CMOS transistors matching the educational model.
@@ -131,6 +139,6 @@ The `transistor_model/` modules express the truth-table behavior of CMOS pull-up
 - Exhaustive instruction decoding across all opcode bytes
 - Cycle-accurate tests for the controller
 - Exhaustive address tests for memory writes, reads, retention, and reset loading
-- Small assembly programs for CPU-level integration
+- End-to-end reference-program execution with architectural-state checks
 
 Any behavior not yet backed by a passing test remains a target, not a claimed result.
