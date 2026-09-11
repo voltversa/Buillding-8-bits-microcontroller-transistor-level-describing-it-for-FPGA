@@ -11,6 +11,7 @@ end entity;
 architecture test of cpu8_tb is
     signal clock : std_logic := '0';
     signal reset : std_logic := '0';
+    signal clock_enable : std_logic := '1';
     signal memory_debug_enable : std_logic := '0';
     signal memory_debug_address : std_logic_vector(7 downto 0) := (others => '0');
     signal memory_debug_data : std_logic_vector(7 downto 0);
@@ -28,6 +29,7 @@ begin
         port map (
             clock => clock,
             reset => reset,
+            clock_enable => clock_enable,
             memory_debug_enable => memory_debug_enable,
             memory_debug_address => memory_debug_address,
             memory_debug_data => memory_debug_data,
@@ -65,6 +67,17 @@ begin
             report "CPU registers did not reset" severity failure;
         assert halted = '0' and fault = '0'
             report "CPU asserted terminal status after reset" severity failure;
+
+        -- Disabling the CPU must hold both controller and datapath state even
+        -- though the external system clock continues to toggle.
+        clock_enable <= '0';
+        for hold_cycle in 1 to 3 loop
+            tick;
+        end loop;
+        assert state_debug = CONTROL_FETCH and pc_debug = x"00" and
+            accumulator_debug = x"00"
+            report "clock enable did not hold the complete CPU state" severity failure;
+        clock_enable <= '1';
 
         while halted /= '1' and fault /= '1' and executed_cycles < 64 loop
             tick;

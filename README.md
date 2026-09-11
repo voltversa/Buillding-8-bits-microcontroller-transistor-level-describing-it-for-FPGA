@@ -9,7 +9,8 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 8 integrates the complete structural CPU and executes its first program:
+Milestone 9 adds a vendor-neutral FPGA demonstration wrapper around the complete
+structural CPU:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
@@ -41,6 +42,10 @@ Milestone 8 integrates the complete structural CPU and executes its first progra
 - safe read-only memory debug access with writes inhibited during inspection
 - end-to-end execution of the reference program in exactly 23 clock cycles
 - verified final state: accumulator `0A`, `MEM[F0] = 05`, and `MEM[F1] = 0A`
+- a system-clock enable pulse that slows the CPU without creating a derived clock
+- asynchronous reset assertion with two-edge synchronized release
+- LED/debug outputs for the accumulator, PC, control state, flags, halt, and fault
+- wrapper-level verification of the reference program in exactly 23 CPU steps
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -55,7 +60,7 @@ The planned CPU is a small accumulator machine intended for transparent implemen
 | Flags | Zero and carry |
 | Execution | Multi-cycle fetch/decode/execute controller |
 | Memory model | Unified program and data memory |
-| FPGA interface | Clock, reset, GPIO, and a simple debug bus |
+| FPGA interface | System clock, reset button, and LED/debug outputs |
 
 The first instruction set and cycle-level behavior are documented in [docs/architecture.md](docs/architecture.md).
 
@@ -68,6 +73,7 @@ rtl/datapath/      Clocked registers and processor datapath blocks
 rtl/control/       Synthesizable instruction decoding and control logic
 rtl/memory/        Structural unified memory and program images
 rtl/cpu/           Complete processor integration
+rtl/fpga/          Vendor-neutral clock, reset, and demonstration wrapper
 tb/                Self-checking simulations
 docs/              Architecture and design decisions
 .github/workflows/ Continuous verification
@@ -94,7 +100,8 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 - [x] Implement the multi-cycle control state machine
 - [x] Add 256-byte memory and a reference program
 - [x] Integrate the complete CPU and run instruction-level tests
-- [ ] Add an FPGA top level, constraints, and board demonstration
+- [x] Add a vendor-neutral FPGA top level and clock/reset conditioning
+- [ ] Add board-specific pin constraints and demonstrate on hardware
 
 ## Design rule
 

@@ -127,6 +127,33 @@ The two stored flags occupy the low bits of an existing eight-bit register: bit 
 
 The end-to-end test resets the CPU, releases it, and lets the default reference program run without testbench intervention. The CPU reaches `HLT` after exactly 23 rising edges with `PC = 0B`, `A = 0A`, `MEM[F0] = 05`, and `MEM[F1] = 0A`. It also verifies that program bytes were not modified and that reset recovers from halt and reloads the initial memory image. These are simulation results; FPGA timing and physical-board operation are not yet claimed.
 
+## Vendor-neutral FPGA wrapper
+
+The implemented `fpga_demo_top` keeps every sequential CPU element in the board's
+system-clock domain. A configurable counter produces a one-clock-wide enable pulse;
+that pulse gates the controller state register and every CPU write, load, and
+program-counter control. The default interval is 50,000,000 system-clock cycles.
+Its visible step rate therefore depends on the oscillator frequency of the selected
+board. This clock-enable scheme avoids routing a logic-generated clock through the
+FPGA fabric.
+
+The external active-high reset asserts internally without waiting for a clock edge.
+A two-stage synchronizer then deasserts it on the second rising system-clock edge,
+so all synchronous CPU state is released together. Reset retains priority over the
+clock enable, allowing a paused or halted CPU to recover.
+
+The wrapper exposes the accumulator, program counter, three-bit controller state,
+zero and carry flags, halt status, and fault status as LED/debug ports. It also
+exports the enable pulse and synchronized reset for verification or optional debug
+headers. Its self-checking test uses a short divider, verifies reset timing, runs the
+reference image to halt in 23 enable pulses, and checks `A = 0A` and `PC = 0B`.
+
+This top level is vendor-neutral. It has no pin assignments, oscillator timing
+constraint, voltage standard, or device selection because no target board has been
+chosen. Consequently, synthesis timing closure and operation on physical hardware
+are not claimed. A board-specific constraints file and hardware demonstration remain
+the next milestone.
+
 ## Abstraction boundary
 
 The `transistor_model/` modules express the truth-table behavior of CMOS pull-up and pull-down networks in VHDL. The accompanying CMOS documentation explains the transistor arrangement. FPGA synthesis starts at `rtl/logic/`, where equivalent cells are expressed as synthesizable structural VHDL-2008. Tests compare behavior at both levels; they do not imply that an FPGA contains discrete CMOS transistors matching the educational model.
@@ -140,5 +167,6 @@ The `transistor_model/` modules express the truth-table behavior of CMOS pull-up
 - Cycle-accurate tests for the controller
 - Exhaustive address tests for memory writes, reads, retention, and reset loading
 - End-to-end reference-program execution with architectural-state checks
+- Clock-enable, reset-conditioning, and wrapper-level reference-program checks
 
 Any behavior not yet backed by a passing test remains a target, not a claimed result.

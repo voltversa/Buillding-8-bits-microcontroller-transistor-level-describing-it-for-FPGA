@@ -6,8 +6,8 @@ use work.instruction_pkg.all;
 use work.control_pkg.all;
 use work.memory_pkg.all;
 
--- Complete structural eight-bit accumulator CPU. Board-specific clocking,
--- reset conditioning, and I/O belong in a later FPGA wrapper.
+-- Complete structural eight-bit accumulator CPU. The clock-enable input lets an
+-- FPGA wrapper single-step the processor without creating a second clock domain.
 entity cpu8 is
     generic (
         initial_content : memory_image_t := REFERENCE_PROGRAM
@@ -15,6 +15,7 @@ entity cpu8 is
     port (
         clock                : in  std_logic;
         reset                : in  std_logic;
+        clock_enable         : in  std_logic;
         memory_debug_enable  : in  std_logic;
         memory_debug_address : in  std_logic_vector(7 downto 0);
         memory_debug_data    : out std_logic_vector(7 downto 0);
@@ -57,12 +58,19 @@ architecture structural of cpu8 is
     signal memory_write_enable : std_logic;
     signal memory_debug_disabled : std_logic;
 
-    signal instruction_load : std_logic;
-    signal operand_load : std_logic;
-    signal accumulator_load : std_logic;
-    signal flags_load : std_logic;
-    signal pc_increment : std_logic;
-    signal pc_load : std_logic;
+    signal instruction_load_control : std_logic;
+    signal operand_load_control : std_logic;
+    signal accumulator_load_control : std_logic;
+    signal flags_load_control : std_logic;
+    signal pc_increment_control : std_logic;
+    signal pc_load_control : std_logic;
+    signal instruction_load_enabled : std_logic;
+    signal operand_load_enabled : std_logic;
+    signal accumulator_load_enabled : std_logic;
+    signal flags_load_enabled : std_logic;
+    signal pc_increment_enabled : std_logic;
+    signal pc_load_enabled : std_logic;
+    signal memory_write_enabled : std_logic;
 begin
     accumulator_debug <= accumulator_value;
     operand_debug <= operand_value;
@@ -76,7 +84,7 @@ begin
         port map (
             clk => clock,
             reset => reset,
-            load_enable => instruction_load,
+            load_enable => instruction_load_enabled,
             data_in => selected_bus,
             data_out => instruction_value
         );
@@ -85,7 +93,7 @@ begin
         port map (
             clk => clock,
             reset => reset,
-            load_enable => operand_load,
+            load_enable => operand_load_enabled,
             data_in => selected_bus,
             data_out => operand_value
         );
@@ -94,7 +102,7 @@ begin
         port map (
             clk => clock,
             reset => reset,
-            load_enable => accumulator_load,
+            load_enable => accumulator_load_enabled,
             data_in => selected_bus,
             data_out => accumulator_value
         );
@@ -105,7 +113,7 @@ begin
         port map (
             clk => clock,
             reset => reset,
-            load_enable => flags_load,
+            load_enable => flags_load_enabled,
             data_in => flags_input,
             data_out => flags_value
         );
@@ -114,8 +122,8 @@ begin
         port map (
             clk => clock,
             reset => reset,
-            load => pc_load,
-            increment => pc_increment,
+            load => pc_load_enabled,
+            increment => pc_increment_enabled,
             data_in => selected_bus,
             count => pc_value
         );
@@ -133,6 +141,7 @@ begin
         port map (
             clock => clock,
             reset => reset,
+            enable => clock_enable,
             instruction_kind => decoded_kind,
             instruction_valid => decoded_valid,
             instruction_operand => decoded_has_operand,
@@ -141,12 +150,12 @@ begin
             state_debug => state_debug,
             bus_select => selected_bus_source,
             address_from_operand => address_from_operand,
-            instruction_load => instruction_load,
-            operand_load => operand_load,
-            accumulator_load => accumulator_load,
-            flags_load => flags_load,
-            pc_increment => pc_increment,
-            pc_load => pc_load,
+            instruction_load => instruction_load_control,
+            operand_load => operand_load_control,
+            accumulator_load => accumulator_load_control,
+            flags_load => flags_load_control,
+            pc_increment => pc_increment_control,
+            pc_load => pc_load_control,
             memory_write => memory_write_control,
             halted => halted,
             fault => fault
@@ -198,9 +207,58 @@ begin
             y => memory_debug_disabled
         );
 
-    safe_memory_write_gate : entity work.and2(structural)
+    instruction_enable_gate : entity work.and2(structural)
+        port map (
+            a => instruction_load_control,
+            b => clock_enable,
+            y => instruction_load_enabled
+        );
+
+    operand_enable_gate : entity work.and2(structural)
+        port map (
+            a => operand_load_control,
+            b => clock_enable,
+            y => operand_load_enabled
+        );
+
+    accumulator_enable_gate : entity work.and2(structural)
+        port map (
+            a => accumulator_load_control,
+            b => clock_enable,
+            y => accumulator_load_enabled
+        );
+
+    flags_enable_gate : entity work.and2(structural)
+        port map (
+            a => flags_load_control,
+            b => clock_enable,
+            y => flags_load_enabled
+        );
+
+    pc_increment_enable_gate : entity work.and2(structural)
+        port map (
+            a => pc_increment_control,
+            b => clock_enable,
+            y => pc_increment_enabled
+        );
+
+    pc_load_enable_gate : entity work.and2(structural)
+        port map (
+            a => pc_load_control,
+            b => clock_enable,
+            y => pc_load_enabled
+        );
+
+    memory_clock_enable_gate : entity work.and2(structural)
         port map (
             a => memory_write_control,
+            b => clock_enable,
+            y => memory_write_enabled
+        );
+
+    safe_memory_write_gate : entity work.and2(structural)
+        port map (
+            a => memory_write_enabled,
             b => memory_debug_disabled,
             y => memory_write_enable
         );

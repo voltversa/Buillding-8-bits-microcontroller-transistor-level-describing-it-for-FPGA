@@ -2,9 +2,9 @@ GHDL ?= ghdl
 GHDL_FLAGS := --std=08
 BUILD_DIR := build/ghdl
 
-.PHONY: test test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory test-cpu clean
+.PHONY: test test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory test-cpu test-fpga clean
 
-test: test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory test-cpu
+test: test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory test-cpu test-fpga
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -128,6 +128,37 @@ test-cpu: $(BUILD_DIR)
 		tb/cpu8_tb.vhd
 	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) cpu8_tb
 	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) cpu8_tb \
+		--assert-level=error
+
+test-fpga: $(BUILD_DIR)
+	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR) \
+		rtl/logic/alu_pkg.vhd \
+		rtl/logic/gates.vhd \
+		rtl/logic/mux2_1bit.vhd \
+		rtl/logic/full_adder_1bit.vhd \
+		rtl/logic/ripple_carry_adder_8bit.vhd \
+		rtl/logic/alu8.vhd \
+		rtl/logic/byte_equal8.vhd \
+		rtl/datapath/bus_pkg.vhd \
+		rtl/datapath/register8.vhd \
+		rtl/datapath/program_counter8.vhd \
+		rtl/datapath/internal_bus8.vhd \
+		rtl/control/instruction_pkg.vhd \
+		rtl/control/opcode_match8.vhd \
+		rtl/control/instruction_decoder.vhd \
+		rtl/control/control_pkg.vhd \
+		rtl/control/control_logic.vhd \
+		rtl/control/control_unit.vhd \
+		rtl/memory/memory_pkg.vhd \
+		rtl/memory/memory_byte.vhd \
+		rtl/memory/memory256x8.vhd \
+		rtl/cpu/cpu8.vhd \
+		rtl/fpga/reset_synchronizer.vhd \
+		rtl/fpga/clock_enable_generator.vhd \
+		rtl/fpga/fpga_demo_top.vhd \
+		tb/fpga_demo_top_tb.vhd
+	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) fpga_demo_top_tb
+	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) fpga_demo_top_tb \
 		--assert-level=error
 
 clean:

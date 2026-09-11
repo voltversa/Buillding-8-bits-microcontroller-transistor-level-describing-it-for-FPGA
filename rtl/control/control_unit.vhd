@@ -8,6 +8,7 @@ entity control_unit is
     port (
         clock                : in  std_logic;
         reset                : in  std_logic;
+        enable               : in  std_logic;
         instruction_kind     : in  instruction_kind_t;
         instruction_valid    : in  std_logic;
         instruction_operand  : in  std_logic;
@@ -42,7 +43,7 @@ begin
         port map (
             clk         => clock,
             reset       => reset,
-            load_enable => '1',
+            load_enable => enable,
             data_in     => state_register_input,
             data_out    => state_register_output
         );

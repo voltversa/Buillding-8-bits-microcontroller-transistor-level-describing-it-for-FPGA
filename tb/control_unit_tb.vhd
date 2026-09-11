@@ -11,6 +11,7 @@ end entity;
 architecture test of control_unit_tb is
     signal clock : std_logic := '0';
     signal reset : std_logic := '0';
+    signal enable : std_logic := '1';
     signal instruction_kind : instruction_kind_t := INSTRUCTION_NOP;
     signal instruction_valid : std_logic := '1';
     signal instruction_operand : std_logic := '0';
@@ -33,6 +34,7 @@ begin
         port map (
             clock                => clock,
             reset                => reset,
+            enable               => enable,
             instruction_kind     => instruction_kind,
             instruction_valid    => instruction_valid,
             instruction_operand  => instruction_operand,
@@ -111,6 +113,14 @@ begin
         reset <= '0';
         expect_controls("reset/fetch", CONTROL_FETCH, BUS_MEMORY,
             '0', '1', '0', '0', '0', '1', '0', '0', '0', '0');
+
+        -- A disabled controller keeps its state while its combinational FETCH
+        -- outputs remain available for the CPU-level enable gates.
+        enable <= '0';
+        tick;
+        expect_controls("disabled fetch hold", CONTROL_FETCH, BUS_MEMORY,
+            '0', '1', '0', '0', '0', '1', '0', '0', '0', '0');
+        enable <= '1';
 
         -- One-byte NOP: FETCH -> DECODE -> EXECUTE -> FETCH.
         instruction_kind <= INSTRUCTION_NOP;
