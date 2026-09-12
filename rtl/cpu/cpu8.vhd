@@ -25,6 +25,7 @@ entity cpu8 is
         pc_debug             : out std_logic_vector(7 downto 0);
         zero_flag_debug      : out std_logic;
         carry_flag_debug     : out std_logic;
+        gpio_output          : out std_logic_vector(7 downto 0);
         state_debug          : out control_state_t;
         halted               : out std_logic;
         fault                : out std_logic
@@ -54,8 +55,13 @@ architecture structural of cpu8 is
     signal processor_memory_address : std_logic_vector(7 downto 0);
     signal selected_memory_address : std_logic_vector(7 downto 0);
     signal memory_data : std_logic_vector(7 downto 0);
+    signal ram_data : std_logic_vector(7 downto 0);
+    signal gpio_value : std_logic_vector(7 downto 0);
+    signal gpio_address_selected : std_logic;
+    signal gpio_address_not_selected : std_logic;
     signal memory_write_control : std_logic;
     signal memory_write_enable : std_logic;
+    signal safe_write_enable : std_logic;
     signal memory_debug_disabled : std_logic;
 
     signal instruction_load_control : std_logic;
@@ -79,6 +85,7 @@ begin
     carry_flag_debug <= flags_value(0);
     zero_flag_debug <= flags_value(1);
     memory_debug_data <= memory_data;
+    gpio_output <= gpio_value;
 
     instruction_register : entity work.register8(rtl)
         port map (
@@ -256,10 +263,37 @@ begin
             y => memory_write_enabled
         );
 
-    safe_memory_write_gate : entity work.and2(structural)
+    debug_write_interlock : entity work.and2(structural)
         port map (
             a => memory_write_enabled,
             b => memory_debug_disabled,
+            y => safe_write_enable
+        );
+
+    gpio_port : entity work.gpio_output_port8(structural)
+        generic map (
+            PORT_ADDRESS => x"FE"
+        )
+        port map (
+            clock => clock,
+            reset => reset,
+            address => selected_memory_address,
+            write_enable => safe_write_enable,
+            data_in => selected_bus,
+            address_match => gpio_address_selected,
+            data_out => gpio_value
+        );
+
+    gpio_select_inverter : entity work.inv1(rtl)
+        port map (
+            a => gpio_address_selected,
+            y => gpio_address_not_selected
+        );
+
+    ram_write_gate : entity work.and2(structural)
+        port map (
+            a => safe_write_enable,
+            b => gpio_address_not_selected,
             y => memory_write_enable
         );
 
@@ -273,6 +307,16 @@ begin
             address => selected_memory_address,
             write_enable => memory_write_enable,
             data_in => selected_bus,
-            data_out => memory_data
+            data_out => ram_data
         );
+
+    generate_io_readback_mux : for bit_index in 0 to 7 generate
+        io_readback_mux : entity work.mux2_1bit(structural)
+            port map (
+                input_0 => ram_data(bit_index),
+                input_1 => gpio_value(bit_index),
+                select_1 => gpio_address_selected,
+                output_y => memory_data(bit_index)
+            );
+    end generate;
 end architecture;

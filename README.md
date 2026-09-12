@@ -9,8 +9,8 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 9 adds a vendor-neutral FPGA demonstration wrapper around the complete
-structural CPU:
+Milestone 10 adds a memory-mapped GPIO output and a visible FPGA demonstration
+program to the complete structural CPU:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
@@ -45,7 +45,10 @@ structural CPU:
 - a system-clock enable pulse that slows the CPU without creating a derived clock
 - asynchronous reset assertion with two-edge synchronized release
 - LED/debug outputs for the accumulator, PC, control state, flags, halt, and fault
-- wrapper-level verification of the reference program in exactly 23 CPU steps
+- an 8-bit output register mapped at address `FE`, with structural address decoding
+- `STA FE` output writes and `LDA FE` readback without modifying the reserved RAM byte
+- an FPGA demo program that writes and reads back `A5`, then halts in 19 CPU steps
+- exhaustive GPIO address, write-enable, hold, and reset verification
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -60,7 +63,7 @@ The planned CPU is a small accumulator machine intended for transparent implemen
 | Flags | Zero and carry |
 | Execution | Multi-cycle fetch/decode/execute controller |
 | Memory model | Unified program and data memory |
-| FPGA interface | System clock, reset button, and LED/debug outputs |
+| FPGA interface | System clock, reset button, memory-mapped GPIO, and LED/debug outputs |
 
 The first instruction set and cycle-level behavior are documented in [docs/architecture.md](docs/architecture.md).
 
@@ -72,6 +75,7 @@ rtl/logic/         Synthesizable structural VHDL logic and arithmetic
 rtl/datapath/      Clocked registers and processor datapath blocks
 rtl/control/       Synthesizable instruction decoding and control logic
 rtl/memory/        Structural unified memory and program images
+rtl/io/            Synthesizable memory-mapped peripheral registers
 rtl/cpu/           Complete processor integration
 rtl/fpga/          Vendor-neutral clock, reset, and demonstration wrapper
 tb/                Self-checking simulations
@@ -101,6 +105,7 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 - [x] Add 256-byte memory and a reference program
 - [x] Integrate the complete CPU and run instruction-level tests
 - [x] Add a vendor-neutral FPGA top level and clock/reset conditioning
+- [x] Add a memory-mapped GPIO output and FPGA demonstration program
 - [ ] Add board-specific pin constraints and demonstrate on hardware
 
 ## Design rule

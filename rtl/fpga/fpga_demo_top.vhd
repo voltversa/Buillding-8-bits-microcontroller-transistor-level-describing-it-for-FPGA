@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use work.control_pkg.all;
+use work.memory_pkg.all;
 
 -- Vendor-neutral demonstration wrapper. A board-specific constraints file must
 -- map these ports to the oscillator, reset button, and LEDs on a chosen board.
@@ -16,6 +17,7 @@ entity fpga_demo_top is
         state_leds        : out std_logic_vector(2 downto 0);
         zero_led          : out std_logic;
         carry_led         : out std_logic;
+        gpio_leds         : out std_logic_vector(7 downto 0);
         halted_led        : out std_logic;
         fault_led         : out std_logic;
         cpu_step_debug    : out std_logic;
@@ -48,6 +50,9 @@ begin
         );
 
     processor : entity work.cpu8(structural)
+        generic map (
+            initial_content => FPGA_DEMO_PROGRAM
+        )
         port map (
             clock => system_clock,
             reset => reset_synchronized,
@@ -61,6 +66,7 @@ begin
             pc_debug => pc_leds,
             zero_flag_debug => zero_led,
             carry_flag_debug => carry_led,
+            gpio_output => gpio_leds,
             state_debug => state_leds,
             halted => halted_led,
             fault => fault_led

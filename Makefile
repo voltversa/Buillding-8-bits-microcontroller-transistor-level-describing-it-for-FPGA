@@ -2,9 +2,9 @@ GHDL ?= ghdl
 GHDL_FLAGS := --std=08
 BUILD_DIR := build/ghdl
 
-.PHONY: test test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory test-cpu test-fpga clean
+.PHONY: test test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory test-io test-cpu test-fpga clean
 
-test: test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory test-cpu test-fpga
+test: test-cmos test-adder test-alu test-datapath test-bus test-decoder test-control test-memory test-io test-cpu test-fpga
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -102,6 +102,17 @@ test-memory: $(BUILD_DIR)
 	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) memory256x8_tb \
 		--assert-level=error
 
+test-io: $(BUILD_DIR)
+	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR) \
+		rtl/logic/gates.vhd \
+		rtl/logic/byte_equal8.vhd \
+		rtl/datapath/register8.vhd \
+		rtl/io/gpio_output_port8.vhd \
+		tb/gpio_output_port8_tb.vhd
+	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) gpio_output_port8_tb
+	$(GHDL) -r $(GHDL_FLAGS) --workdir=$(BUILD_DIR) gpio_output_port8_tb \
+		--assert-level=error
+
 test-cpu: $(BUILD_DIR)
 	$(GHDL) -a $(GHDL_FLAGS) --workdir=$(BUILD_DIR) \
 		rtl/logic/alu_pkg.vhd \
@@ -124,6 +135,7 @@ test-cpu: $(BUILD_DIR)
 		rtl/memory/memory_pkg.vhd \
 		rtl/memory/memory_byte.vhd \
 		rtl/memory/memory256x8.vhd \
+		rtl/io/gpio_output_port8.vhd \
 		rtl/cpu/cpu8.vhd \
 		tb/cpu8_tb.vhd
 	$(GHDL) -e $(GHDL_FLAGS) --workdir=$(BUILD_DIR) cpu8_tb
@@ -152,6 +164,7 @@ test-fpga: $(BUILD_DIR)
 		rtl/memory/memory_pkg.vhd \
 		rtl/memory/memory_byte.vhd \
 		rtl/memory/memory256x8.vhd \
+		rtl/io/gpio_output_port8.vhd \
 		rtl/cpu/cpu8.vhd \
 		rtl/fpga/reset_synchronizer.vhd \
 		rtl/fpga/clock_enable_generator.vhd \

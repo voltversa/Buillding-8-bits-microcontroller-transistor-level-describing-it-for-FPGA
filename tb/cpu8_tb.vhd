@@ -21,6 +21,7 @@ architecture test of cpu8_tb is
     signal pc_debug : std_logic_vector(7 downto 0);
     signal zero_flag_debug : std_logic;
     signal carry_flag_debug : std_logic;
+    signal gpio_output : std_logic_vector(7 downto 0);
     signal state_debug : control_state_t;
     signal halted : std_logic;
     signal fault : std_logic;
@@ -39,6 +40,7 @@ begin
             pc_debug => pc_debug,
             zero_flag_debug => zero_flag_debug,
             carry_flag_debug => carry_flag_debug,
+            gpio_output => gpio_output,
             state_debug => state_debug,
             halted => halted,
             fault => fault
@@ -67,6 +69,8 @@ begin
             report "CPU registers did not reset" severity failure;
         assert halted = '0' and fault = '0'
             report "CPU asserted terminal status after reset" severity failure;
+        assert gpio_output = x"00"
+            report "GPIO output did not reset" severity failure;
 
         -- Disabling the CPU must hold both controller and datapath state even
         -- though the external system clock continues to toggle.
@@ -102,6 +106,8 @@ begin
             report "operand register mismatch after final STA" severity failure;
         assert zero_flag_debug = '0' and carry_flag_debug = '0'
             report "ADD flags mismatch for 05 + 05" severity failure;
+        assert gpio_output = x"00"
+            report "reference program unexpectedly changed GPIO" severity failure;
 
         memory_debug_enable <= '1';
         memory_debug_address <= x"F0";

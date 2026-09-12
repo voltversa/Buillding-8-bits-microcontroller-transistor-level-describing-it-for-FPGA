@@ -15,6 +15,7 @@ architecture test of fpga_demo_top_tb is
     signal state_leds : std_logic_vector(2 downto 0);
     signal zero_led : std_logic;
     signal carry_led : std_logic;
+    signal gpio_leds : std_logic_vector(7 downto 0);
     signal halted_led : std_logic;
     signal fault_led : std_logic;
     signal cpu_step_debug : std_logic;
@@ -34,6 +35,7 @@ begin
             state_leds => state_leds,
             zero_led => zero_led,
             carry_led => carry_led,
+            gpio_leds => gpio_leds,
             halted_led => halted_led,
             fault_led => fault_led,
             cpu_step_debug => cpu_step_debug,
@@ -77,14 +79,16 @@ begin
             report "wrapper execution entered the fault state" severity failure;
         assert halted_led = '1' and state_leds = CONTROL_HALTED
             report "wrapper execution did not halt" severity failure;
-        assert enabled_cycles = 23
+        assert enabled_cycles = 19
             report "wrapper CPU-step count mismatch: " &
                 integer'image(enabled_cycles)
             severity failure;
-        assert accumulator_leds = x"0A" and pc_leds = x"0B"
+        assert accumulator_leds = x"A5" and pc_leds = x"09"
             report "wrapper debug LEDs show an incorrect final CPU state" severity failure;
+        assert gpio_leds = x"A5"
+            report "FPGA demo program did not update the GPIO LEDs" severity failure;
         assert zero_led = '0' and carry_led = '0'
-            report "wrapper flag LEDs show incorrect ADD flags" severity failure;
+            report "wrapper flag LEDs changed unexpectedly" severity failure;
 
         -- Async reset indication asserts immediately and CPU state clears on
         -- the following system-clock edge, even while the divider is stopped.
@@ -98,7 +102,10 @@ begin
             accumulator_leds = x"00" and pc_leds = x"00"
             report "wrapper reset did not recover the halted CPU" severity failure;
 
-        report "PASS: FPGA wrapper ran the reference program in 23 CPU steps" severity note;
+        assert gpio_leds = x"00"
+            report "wrapper reset did not clear the GPIO LEDs" severity failure;
+
+        report "PASS: FPGA wrapper wrote and read GPIO in 19 CPU steps" severity note;
         finish;
     end process;
 end architecture;
