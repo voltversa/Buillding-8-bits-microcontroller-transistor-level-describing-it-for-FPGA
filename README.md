@@ -9,8 +9,8 @@ An educational 8-bit microcontroller built from the bottom up. The project conne
 
 ## Current milestone
 
-Milestone 10 adds a memory-mapped GPIO output and a visible FPGA demonstration
-program to the complete structural CPU:
+Milestone 11 adds synchronized memory-mapped GPIO input and a complete
+switch-to-LED FPGA demonstration path:
 
 - CMOS inverter, NAND, and NOR behavior models in VHDL
 - synthesizable AND, OR, XOR, and NOT cells
@@ -47,8 +47,10 @@ program to the complete structural CPU:
 - LED/debug outputs for the accumulator, PC, control state, flags, halt, and fault
 - an 8-bit output register mapped at address `FE`, with structural address decoding
 - `STA FE` output writes and `LDA FE` readback without modifying the reserved RAM byte
-- an FPGA demo program that writes and reads back `A5`, then halts in 19 CPU steps
-- exhaustive GPIO address, write-enable, hold, and reset verification
+- an 8-bit input port mapped at `FD`, with two-stage input synchronization
+- read-only `LDA FD` access, with writes excluded from ordinary RAM
+- an FPGA demo program that copies stable switches to LEDs, then halts in 11 CPU steps
+- exhaustive GPIO address, synchronization, write-enable, hold, and reset verification
 - automated GitHub Actions simulation with GHDL
 
 ## Target architecture
@@ -106,6 +108,7 @@ The testbenches stop with a non-zero exit code on the first mismatch, making the
 - [x] Integrate the complete CPU and run instruction-level tests
 - [x] Add a vendor-neutral FPGA top level and clock/reset conditioning
 - [x] Add a memory-mapped GPIO output and FPGA demonstration program
+- [x] Add synchronized GPIO input and a switch-to-LED demonstration path
 - [ ] Add board-specific pin constraints and demonstrate on hardware
 
 ## Design rule

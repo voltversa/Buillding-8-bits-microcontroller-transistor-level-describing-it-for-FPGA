@@ -12,6 +12,7 @@ entity fpga_demo_top is
     port (
         system_clock      : in  std_logic;
         reset_button      : in  std_logic;
+        gpio_switches     : in  std_logic_vector(7 downto 0);
         accumulator_leds  : out std_logic_vector(7 downto 0);
         pc_leds           : out std_logic_vector(7 downto 0);
         state_leds        : out std_logic_vector(2 downto 0);
@@ -57,6 +58,7 @@ begin
             clock => system_clock,
             reset => reset_synchronized,
             clock_enable => cpu_step,
+            gpio_input => gpio_switches,
             memory_debug_enable => '0',
             memory_debug_address => (others => '0'),
             memory_debug_data => memory_unused,

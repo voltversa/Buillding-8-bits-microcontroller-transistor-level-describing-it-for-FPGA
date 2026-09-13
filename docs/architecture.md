@@ -127,7 +127,7 @@ The two stored flags occupy the low bits of an existing eight-bit register: bit 
 
 The end-to-end test resets the CPU, releases it, and lets the default reference program run without testbench intervention. The CPU reaches `HLT` after exactly 23 rising edges with `PC = 0B`, `A = 0A`, `MEM[F0] = 05`, and `MEM[F1] = 0A`. It also verifies that program bytes were not modified and that reset recovers from halt and reloads the initial memory image. These are simulation results; FPGA timing and physical-board operation are not yet claimed.
 
-## Memory-mapped GPIO output
+## Memory-mapped GPIO
 
 Address `FE` is reserved for an eight-bit output register. The port uses the same
 structural equality comparator as the memory decoder, combines the address match
@@ -140,19 +140,29 @@ The GPIO address is removed from ordinary RAM writes. On reads, eight structural
 `LDA FE` reads back the last output value. Debug reads at `FE` see the same mapped
 register. All other addresses retain the original unified-memory behavior.
 
+Address `FD` is reserved for eight external inputs. Two cascaded instances of the
+reusable register sample the pins on the system clock before their value enters the
+CPU read path. `LDA FD` reads the second stage. The synchronizer continues sampling
+on every system-clock edge even when the slower CPU enable is inactive, giving a
+stable value time to propagate before an instruction reads it.
+
+Writes to `FD`, like writes to the output address `FE`, are excluded from RAM. The
+input port is read-only, so `STA FD` has no architectural effect. Per-bit two-stage
+synchronization is appropriate for slowly changing board switches; it is not a
+coherent transfer protocol for a high-speed multi-bit external bus.
+
 The FPGA demonstration image is separate from the CPU reference program:
 
 | Address | Bytes | Instruction | Purpose |
 |---:|---|---|---|
-| `00` | `10 A5` | `LDI A5` | Load the visible test pattern |
-| `02` | `12 FE` | `STA FE` | Drive `A5` onto the GPIO output |
-| `04` | `10 00` | `LDI 00` | Clear A before the readback check |
-| `06` | `11 FE` | `LDA FE` | Read the output register back into A |
-| `08` | `FF` | `HLT` | Stop with A and GPIO both equal to `A5` |
+| `00` | `11 FD` | `LDA FD` | Read the synchronized switch inputs |
+| `02` | `12 FE` | `STA FE` | Copy the input value to the GPIO LEDs |
+| `04` | `FF` | `HLT` | Stop with A and GPIO showing the switches |
 
-The standalone peripheral test checks all 256 addresses as well as disabled writes,
-hold behavior, and reset. The integrated wrapper test verifies the program reaches
-halt in 19 enabled CPU steps with `A = A5`, `GPIO = A5`, and `PC = 09`.
+The standalone peripheral tests check all 256 addresses as well as two-stage input
+latency, disabled output writes, hold behavior, and reset. The integrated wrapper
+test holds the input switches at `3C` and verifies the program reaches halt in 11
+enabled CPU steps with `A = 3C`, `GPIO = 3C`, and `PC = 05`.
 
 ## Vendor-neutral FPGA wrapper
 
@@ -169,12 +179,12 @@ A two-stage synchronizer then deasserts it on the second rising system-clock edg
 so all synchronous CPU state is released together. Reset retains priority over the
 clock enable, allowing a paused or halted CPU to recover.
 
-The wrapper exposes the accumulator, program counter, memory-mapped GPIO register,
-three-bit controller state, zero and carry flags, halt status, and fault status as
-LED/debug ports. It also exports the enable pulse and synchronized reset for
-verification or optional debug headers. Its self-checking test uses a short divider,
-verifies reset timing, and runs the separate FPGA demonstration image described
-above.
+The wrapper accepts eight switch inputs and exposes the accumulator, program counter,
+memory-mapped GPIO output register, three-bit controller state, zero and carry flags,
+halt status, and fault status as LED/debug ports. It also exports the enable pulse
+and synchronized reset for verification or optional debug headers. Its self-checking
+test uses a short divider, verifies reset timing, and runs the separate FPGA
+demonstration image described above.
 
 This top level is vendor-neutral. It has no pin assignments, oscillator timing
 constraint, voltage standard, or device selection because no target board has been
@@ -195,7 +205,7 @@ The `transistor_model/` modules express the truth-table behavior of CMOS pull-up
 - Cycle-accurate tests for the controller
 - Exhaustive address tests for memory writes, reads, retention, and reset loading
 - End-to-end reference-program execution with architectural-state checks
-- Exhaustive memory-mapped GPIO decoding and register checks
+- Exhaustive memory-mapped GPIO decoding, synchronization, and register checks
 - Clock-enable, reset-conditioning, and wrapper-level demonstration-program checks
 
 Any behavior not yet backed by a passing test remains a target, not a claimed result.

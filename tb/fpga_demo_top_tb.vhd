@@ -10,6 +10,7 @@ architecture test of fpga_demo_top_tb is
     constant CLOCK_PERIOD : time := 10 ns;
     signal system_clock : std_logic := '0';
     signal reset_button : std_logic := '1';
+    signal gpio_switches : std_logic_vector(7 downto 0) := x"3C";
     signal accumulator_leds : std_logic_vector(7 downto 0);
     signal pc_leds : std_logic_vector(7 downto 0);
     signal state_leds : std_logic_vector(2 downto 0);
@@ -30,6 +31,7 @@ begin
         port map (
             system_clock => system_clock,
             reset_button => reset_button,
+            gpio_switches => gpio_switches,
             accumulator_leds => accumulator_leds,
             pc_leds => pc_leds,
             state_leds => state_leds,
@@ -79,14 +81,14 @@ begin
             report "wrapper execution entered the fault state" severity failure;
         assert halted_led = '1' and state_leds = CONTROL_HALTED
             report "wrapper execution did not halt" severity failure;
-        assert enabled_cycles = 19
+        assert enabled_cycles = 11
             report "wrapper CPU-step count mismatch: " &
                 integer'image(enabled_cycles)
             severity failure;
-        assert accumulator_leds = x"A5" and pc_leds = x"09"
+        assert accumulator_leds = x"3C" and pc_leds = x"05"
             report "wrapper debug LEDs show an incorrect final CPU state" severity failure;
-        assert gpio_leds = x"A5"
-            report "FPGA demo program did not update the GPIO LEDs" severity failure;
+        assert gpio_leds = x"3C"
+            report "FPGA demo did not copy switches to GPIO LEDs" severity failure;
         assert zero_led = '0' and carry_led = '0'
             report "wrapper flag LEDs changed unexpectedly" severity failure;
 
@@ -105,7 +107,7 @@ begin
         assert gpio_leds = x"00"
             report "wrapper reset did not clear the GPIO LEDs" severity failure;
 
-        report "PASS: FPGA wrapper wrote and read GPIO in 19 CPU steps" severity note;
+        report "PASS: FPGA wrapper copied switches to LEDs in 11 CPU steps" severity note;
         finish;
     end process;
 end architecture;

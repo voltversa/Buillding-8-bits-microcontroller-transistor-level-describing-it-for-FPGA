@@ -26,17 +26,13 @@ package memory_pkg is
     );
 
     -- FPGA demonstration program:
-    --   A <- A5; GPIO[FE] <- A; A <- 00; A <- GPIO[FE]; halt.
+    --   A <- GPIO_IN[FD]; GPIO_OUT[FE] <- A; halt.
     constant FPGA_DEMO_PROGRAM : memory_image_t := (
-        0 => OPCODE_LDI,
-        1 => x"A5",
+        0 => OPCODE_LDA,
+        1 => x"FD",
         2 => OPCODE_STA,
         3 => x"FE",
-        4 => OPCODE_LDI,
-        5 => x"00",
-        6 => OPCODE_LDA,
-        7 => x"FE",
-        8 => OPCODE_HLT,
+        4 => OPCODE_HLT,
         others => x"00"
     );
 end package;

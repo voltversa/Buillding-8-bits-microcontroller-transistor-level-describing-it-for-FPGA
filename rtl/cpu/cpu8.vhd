@@ -16,6 +16,7 @@ entity cpu8 is
         clock                : in  std_logic;
         reset                : in  std_logic;
         clock_enable         : in  std_logic;
+        gpio_input           : in  std_logic_vector(7 downto 0);
         memory_debug_enable  : in  std_logic;
         memory_debug_address : in  std_logic_vector(7 downto 0);
         memory_debug_data    : out std_logic_vector(7 downto 0);
@@ -57,8 +58,12 @@ architecture structural of cpu8 is
     signal memory_data : std_logic_vector(7 downto 0);
     signal ram_data : std_logic_vector(7 downto 0);
     signal gpio_value : std_logic_vector(7 downto 0);
+    signal gpio_input_value : std_logic_vector(7 downto 0);
     signal gpio_address_selected : std_logic;
+    signal gpio_input_address_selected : std_logic;
+    signal any_gpio_address_selected : std_logic;
     signal gpio_address_not_selected : std_logic;
+    signal ram_or_input_data : std_logic_vector(7 downto 0);
     signal memory_write_control : std_logic;
     signal memory_write_enable : std_logic;
     signal safe_write_enable : std_logic;
@@ -284,9 +289,29 @@ begin
             data_out => gpio_value
         );
 
-    gpio_select_inverter : entity work.inv1(rtl)
+    gpio_input_port : entity work.gpio_input_port8(structural)
+        generic map (
+            PORT_ADDRESS => x"FD"
+        )
+        port map (
+            clock => clock,
+            reset => reset,
+            address => selected_memory_address,
+            gpio_in => gpio_input,
+            address_match => gpio_input_address_selected,
+            data_out => gpio_input_value
+        );
+
+    gpio_select_combiner : entity work.or2(structural)
         port map (
             a => gpio_address_selected,
+            b => gpio_input_address_selected,
+            y => any_gpio_address_selected
+        );
+
+    gpio_select_inverter : entity work.inv1(rtl)
+        port map (
+            a => any_gpio_address_selected,
             y => gpio_address_not_selected
         );
 
@@ -310,10 +335,18 @@ begin
             data_out => ram_data
         );
 
-    generate_io_readback_mux : for bit_index in 0 to 7 generate
-        io_readback_mux : entity work.mux2_1bit(structural)
+    generate_io_readback_muxes : for bit_index in 0 to 7 generate
+        input_readback_mux : entity work.mux2_1bit(structural)
             port map (
                 input_0 => ram_data(bit_index),
+                input_1 => gpio_input_value(bit_index),
+                select_1 => gpio_input_address_selected,
+                output_y => ram_or_input_data(bit_index)
+            );
+
+        output_readback_mux : entity work.mux2_1bit(structural)
+            port map (
+                input_0 => ram_or_input_data(bit_index),
                 input_1 => gpio_value(bit_index),
                 select_1 => gpio_address_selected,
                 output_y => memory_data(bit_index)

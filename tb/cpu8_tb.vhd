@@ -12,6 +12,7 @@ architecture test of cpu8_tb is
     signal clock : std_logic := '0';
     signal reset : std_logic := '0';
     signal clock_enable : std_logic := '1';
+    signal gpio_input : std_logic_vector(7 downto 0) := (others => '0');
     signal memory_debug_enable : std_logic := '0';
     signal memory_debug_address : std_logic_vector(7 downto 0) := (others => '0');
     signal memory_debug_data : std_logic_vector(7 downto 0);
@@ -31,6 +32,7 @@ begin
             clock => clock,
             reset => reset,
             clock_enable => clock_enable,
+            gpio_input => gpio_input,
             memory_debug_enable => memory_debug_enable,
             memory_debug_address => memory_debug_address,
             memory_debug_data => memory_debug_data,
